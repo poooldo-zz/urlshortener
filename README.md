@@ -2,8 +2,7 @@
 
 ## Introduction
 
-This dockerfile is based on the arma3server docker image. It just setup Altis Life content and start the server with this mod.
-The container needs all dependencies from arma3server, plus a MySQL database instance. Read instructions below for further details.
+This is an url shortener using flask and memcached for storage. Follow the below instructions to setup your own instance.
 
 ## Building from source
 
@@ -21,12 +20,7 @@ docker build -t urlshortener .
 You need to define two additional variables in you instance/config.py file. These are:
 
 HOST indicating the servername prefix that will be used to send the reply url. Example: http[s]://[www].example.com
-SERVERFILE is an absolute file path containing one or several tuples of (server, port).
-Example: 
-
-localhost, 11211
-localhost, 11212
-..., ...
+SERVERFILE is an absolute file path containing one or several tuples of (server, port), one tuple per line. Example: localhost 11211
 
 ### Database
 
