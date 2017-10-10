@@ -3,6 +3,7 @@
 ## Introduction
 
 This is an url shortener using flask and memcached for storage. Follow the below instructions to setup your own instance.
+You can give it a try [here](https://s.akira.fr)
 
 ## Building from source
 
