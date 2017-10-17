@@ -3,7 +3,7 @@ from pymemcache.client.hash import HashClient
 
 class Database(object):
     
-    def __init__(self, servers):
+    def __init__(self, servers, key_expiration):
         self.client = HashClient(
             servers=servers,
             connect_timeout=True,
@@ -11,9 +11,10 @@ class Database(object):
             use_pooling=True,
             max_pool_size=100
             )
+        self.key_expiration = key_expiration
 
     def set_value(self, key, value):
-        return self.client.set(key, value.encode('utf-8'), 3600)
+        return self.client.set(key, value.encode('utf-8'), self.key_expiration)
 
     def get_value(self, key):
         res = None

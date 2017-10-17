@@ -9,7 +9,8 @@ with open(app.config['DB_SERVERS']) as file_servers:
     for line in file_servers:
         server_name, server_port = line.split()
         srvs.append((server_name, int(server_port)))
-db = database.Database(servers=srvs)
+
+db = database.Database(servers=srvs, key_expiration=app.config['DB_KEYEXP'])
 
 if app.config['ALPHABASE'] == 'auto':
     ALPHA_BASE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"

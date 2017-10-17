@@ -21,7 +21,7 @@ docker build -t urlshortener .
 You need to define two additional variables in you instance/config.py file. These are:
 
 HOST indicating the servername prefix that will be used to send the reply url. Example: http[s]://[www].example.com
-SERVERFILE is an absolute file path containing one or several tuples of (server, port), one tuple per line. Example: localhost 11211
+DB_SERVERS is an absolute file path containing one or several tuples of (server, port), one tuple per line. Example: localhost 11211
 
 ### Database
 
@@ -59,8 +59,10 @@ server {
 
 ## Running
 
+serversfile below corresponds to DB_SERVERS in the previous section "Variables"
+
 ```
-docker run --network=host -d -t urlshortener
+docker run --network=host -v /host/path/to/serversfile:/container/path/to/serversfile -d -t urlshortener
 ```
 
 ## Logging
