@@ -2,3 +2,5 @@
 TODO
 serversfile
 instance/*
+app/templates/*
+app/static/*

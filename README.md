@@ -29,7 +29,7 @@ The default database to store the url keys is memcached
 
 ```
 docker pull memcached
-docker run -d -p 11211:11211 -t memcached
+docker run -d -p 127.0.0.1:11211:11211 -t memcached
 ```
 
 ### Web server
