@@ -8,6 +8,15 @@ class Memcache(object):
     from pymemcache.client.hash import HashClient
     
     def __init__(self, host, key_expiration, username=None, password=None):
+    """
+    Instanciate a memcache storage backend object
+    @params:
+        host: the server to connect to
+        key_expiration: key expiration in seconds
+        username: not use
+        password: not use
+    @returns:
+    """
         self.client = HashClient(
             servers=host,
             connect_timeout=True,
@@ -18,9 +27,24 @@ class Memcache(object):
         self.key_expiration = key_expiration
 
     def set_value(self, key, value):
+    """
+    Set a new record in the datavase for a short code
+    @params:
+        key: the short code to insert
+        value: the long url corresponding
+    @returns:
+        True or False if succeeded or not
+    """
         return self.client.set(key, value.encode('utf-8'), self.key_expiration)
 
     def get_value(self, key):
+    """
+    Get a long url from the shorten form
+    @params:
+        key: the short form to lookup
+    @returns:
+        a long url if found, None otherwise
+    """
         res = None
         res = self.client.get(key)
         if res is not None:
@@ -41,6 +65,15 @@ class Couchbase(object):
     import json
 
     def __init__(self, host, username, password, key_expiration):
+    """
+    Instanciate a couchbase storage backend object
+    @params:
+        host: the server to connect to
+        key_expiration: key expiration in seconds
+        username: the user to connect to the database
+        password: the related password
+    @returns:
+    """
         cluster = self.Cluster('couchbase://{}'.format(host))
         authenticator = self.PasswordAuthenticator(username, password)
         cluster.authenticate(authenticator)
@@ -49,9 +82,21 @@ class Couchbase(object):
 
     #TODO reconnect after losing connection
     def reconnect(self):
+    """
+
+    """
         pass
 
+
     def set_value(self, key, value):
+    """
+    Set a new record in the datavase for a short code
+    @params:
+        key: the short code to insert
+        value: the long url corresponding
+    @returns:
+        True or False if succeeded or not
+    """
         try:
             self.bucket.insert(key, {'url': value, 'hit_count': 0}, 
                                ttl=self.key_expiration,
@@ -61,6 +106,13 @@ class Couchbase(object):
         return True
 
     def get_value(self, key):
+    """
+    Get a long url from the shorten form
+    @params:
+        key: the short code to lookup
+    @returns:
+        a long url if found, None otherwise
+    """
         try:
             value = self.bucket.get(key).value
         except self.couchbase.exceptions.NotFoundError:
@@ -70,13 +122,27 @@ class Couchbase(object):
         return value['url']
 
     def get_stat(self, key):
+    """
+    Get the hit counter for a shorten url
+    @params:
+        key: the shorten code to lookup
+    @returns:
+        the hit count value, None otherwise
+    """
         try:
             value = self.bucket.get(key).value
         except self.couchbase.exceptions.NotFoundError:
             return None
         return value['hit_count']
 
-    def get_urls(self):
+    def get_all(self):
+    """
+    Get all urls, shorten code and statistics from
+    the database
+    @params:
+    @returns:
+        a json containing all the data, None otherwise
+    """
         pass
 
 if __name__ == '__main__':
