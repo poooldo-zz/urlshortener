@@ -1,8 +1,15 @@
 <html>
 <head>
-<title>shortener: not a valid url</title>
+<title>shortener - Bad request</title>
+<meta http-equiv="refresh" content="5; URL=https://{{host}}">
+<meta name="keywords" content="automatic redirection">
 </head>
 <body>
-not a valid url.
+{% if error %}
+<h2>Bad request: {{ error }}</h2>
+{% else %}
+<h2>Bad request : please try again later :/</h2>
+{% endif %}
+You will be redirect to the homepage in 5 seconds...
 </body>
 </html>
