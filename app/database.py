@@ -18,7 +18,7 @@ class Memcache(object):
         @returns:
         """
         self.client = HashClient(
-            servers=host,
+            servers='{} 11211'.format(host),
             connect_timeout=True,
             timeout=True,
             use_pooling=True,
@@ -50,6 +50,12 @@ class Memcache(object):
         if res is not None:
             return res.decode('utf-8')
         return None
+    
+    def get_stat(self, key):
+        pass
+
+    def get_all(self):
+        pass
 
 class Couchbase(object):
     """
@@ -61,8 +67,10 @@ class Couchbase(object):
     from couchbase.admin import Admin
     from couchbase.bucket import Bucket
     from couchbase.cluster import Cluster
+    from couchbase import LOCKMODE_WAIT
     from couchbase.cluster import PasswordAuthenticator
     import json
+    import threading
 
     def __init__(self, host, username, password, key_expiration):
         """
@@ -77,13 +85,13 @@ class Couchbase(object):
         cluster = self.Cluster('couchbase://{}'.format(host))
         authenticator = self.PasswordAuthenticator(username, password)
         cluster.authenticate(authenticator)
-        self.bucket = cluster.open_bucket('shortener')
+        self.bucket = cluster.open_bucket('shortener', lockmode=self.LOCKMODE_WAIT)
         self.key_expiration = key_expiration
+        self.lock = self.threading.Lock()
 
     #TODO reconnect after losing connection
     def reconnect(self):
         pass
-
 
     def set_value(self, key, value):
         """
@@ -110,12 +118,14 @@ class Couchbase(object):
         @returns:
             a long url if found, None otherwise
         """
+        self.lock.acquire()
         try:
             value = self.bucket.get(key).value
         except self.couchbase.exceptions.NotFoundError:
             return None
         value['hit_count'] += 1
         self.bucket.replace(key, value)
+        self.lock.release()
         return value['url']
 
     def get_stat(self, key):

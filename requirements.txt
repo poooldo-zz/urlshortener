@@ -5,3 +5,4 @@ pymemcache==1.4.3
 setuptools==5.5.1
 six==1.10.0
 Werkzeug==0.12.2
+couchbase==2.3.5
