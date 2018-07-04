@@ -3,13 +3,17 @@ from app import database
 from flask import render_template, redirect, request, Response
 from flask import jsonify
 from functools import wraps
+from passlib.hash import argon2
+import json
 import random
 import re
-import json
 
 ####################################
 ##### App parameters loading #######
 ####################################
+
+with open(".password") as hashfile:
+    admin_hash = hashfile.readline()[:-1]
 
 db_class = getattr(database, app.config['DB_DRIVER'])
 db_host = app.config['DB_HOST']
@@ -38,7 +42,7 @@ ALPHA_BASE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 KEY_LEN= int(app.config['KEYLEN'])
 # the application domain
 WEB_HOST = app.config['WEB_HOST']
-REDIRECT_CODE = 302
+REDIRECT_CODE = 301
 MAX_URL_SIZE = 2000
 
 ####################################
@@ -54,19 +58,15 @@ def page_not_found():
     return render_template('404.html', host=WEB_HOST), 404
 
 ####################################
-############ Frontend ##############
+######## Basic Auth mecanism #######
 ####################################
-
-##                     ##
-## Basic Auth mecanism ##
-##                     ##
 
 def check_auth(username, password):
     """
     This function is called to check if a username /
     password combination is valid.
     """
-    return username == 'admin' and password == 'secret'
+    return username == 'admin' and argon2.verify(password, admin_hash)
 
 def authenticate():
     """Sends a 401 response that enables basic auth"""
@@ -84,9 +84,9 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
-##                        ##
-##                        ##
-##                        ##
+####################################
+############ Frontend ##############
+####################################
 
 @app.route('/')
 def index():
@@ -112,7 +112,7 @@ def post_index():
     result = api_shorten()
     json_data = json.loads(result.data.decode('utf-8'))
     if json_data['status'] == 'ok':
-        return "{}".format(json_data['url'])
+        return render_template('index.html', url='https://{}'.format(json_data['url'])), 200
     return bad_request(json_data['status'])
 
 @app.route('/admin/stats')
@@ -125,11 +125,11 @@ def admin():
     @returns:
         the page containing the statistics
     """
-    l = []
+    results_list = []
     results = db.get_all()
-    for r in results:
-        l.append(r)
-    return render_template('admin.html', results=l), 200 
+    for result in results:
+        results_list.append(result)
+    return render_template('admin.html', results=results_list), 200 
 
 ####################################
 ############ Backend ###############
@@ -195,3 +195,12 @@ def api_shorten_stat():
     if hit_count is not None:
         return jsonify({'status': 'ok', 'url': '{}'.format(short_name), 'hit_count': '{}'.format(hit_count)})
     return jsonify({'status': 'short url not found', 'url': '{}'.format(short_name)})
+
+@app.route('/api/admin')
+@requires_auth
+def api_admin():
+    results_list = []
+    results = db.get_all()
+    for result in results:
+        results_list.append(result)
+    return jsonify(results_list)

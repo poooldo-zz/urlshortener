@@ -121,12 +121,14 @@ class Couchbase(object):
         self.lock.acquire()
         try:
             value = self.bucket.get(key).value
+            value['hit_count'] += 1
+            self.bucket.replace(key, value)
+            return value['url']
         except self.couchbase.exceptions.NotFoundError:
             return None
-        value['hit_count'] += 1
-        self.bucket.replace(key, value)
-        self.lock.release()
-        return value['url']
+        finally:
+            self.lock.release()
+
 
     def get_stat(self, key):
         """
@@ -150,15 +152,8 @@ class Couchbase(object):
         @returns:
             a json containing all the data, None otherwise
         """
-        rows = self.bucket.n1ql_query('SELECT META().id, url, hit_count FROM shortener')
-        return rows
-
-if __name__ == '__main__':
-
-    cb = Couchbase(host='51.38.45.89', username='admin', password='tzgz61fen', key_expiration=60)
-    cb.set_value('test', 'http://slashdot.org')
-    e = cb.get_value('test')
-    print(e)
-    rows = cb.get_all()
-    for r in rows:
-        print(r)
+        try:
+            rows = self.bucket.n1ql_query('SELECT META().id, url, hit_count FROM shortener')
+            return rows
+        except couchbase.exceptions.HTTPError:
+            return None
