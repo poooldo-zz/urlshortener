@@ -1,7 +1,8 @@
 from app import app
 from app import database
-from flask import render_template, redirect, request
+from flask import render_template, redirect, request, Response
 from flask import jsonify
+from functools import wraps
 import random
 import re
 import json
@@ -38,6 +39,7 @@ KEY_LEN= int(app.config['KEYLEN'])
 # the application domain
 WEB_HOST = app.config['WEB_HOST']
 REDIRECT_CODE = 302
+MAX_URL_SIZE = 2000
 
 ####################################
 ####### HTTP error handlers ########
@@ -54,6 +56,37 @@ def page_not_found():
 ####################################
 ############ Frontend ##############
 ####################################
+
+##                     ##
+## Basic Auth mecanism ##
+##                     ##
+
+def check_auth(username, password):
+    """
+    This function is called to check if a username /
+    password combination is valid.
+    """
+    return username == 'admin' and password == 'secret'
+
+def authenticate():
+    """Sends a 401 response that enables basic auth"""
+    return Response(
+    'Could not verify your access level for that URL.\n'
+    'You have to login with proper credentials', 401,
+    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
+def requires_auth(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    return decorated
+
+##                        ##
+##                        ##
+##                        ##
 
 @app.route('/')
 def index():
@@ -83,6 +116,7 @@ def post_index():
     return bad_request(json_data['status'])
 
 @app.route('/admin/stats')
+@requires_auth
 def admin():
     """
     Get the statistics of shorten url
@@ -91,7 +125,11 @@ def admin():
     @returns:
         the page containing the statistics
     """
-    pass
+    l = []
+    results = db.get_all()
+    for r in results:
+        l.append(r)
+    return render_template('admin.html', results=l), 200 
 
 ####################################
 ############ Backend ###############
@@ -124,6 +162,8 @@ def api_shorten():
         and the shorten url if success
     """
     url = request.values.get('url')
+    if len(url) > MAX_URL_SIZE:
+        return jsonify({'status': 'url too long - must be under 2000 chars'})
     if not url:
         return jsonify({'status': 'url missing - expected : http[s]://domain.gtld/[args]'})
     url_is_valid = re.fullmatch('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', url)
@@ -137,13 +177,6 @@ def api_shorten():
         value = db.get_value(ukey)
     db.set_value(ukey, url)
     return jsonify({'status': 'ok', 'url': '{}/{}'.format(WEB_HOST, ukey)})
-
-@app.route('/api/list')
-def api_shorten_list():
-    """
-
-    """
-    return "list"
 
 @app.route('/api/stat')
 def api_shorten_stat():
