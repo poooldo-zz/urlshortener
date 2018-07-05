@@ -147,6 +147,13 @@ Example:
 docker run -p 5000:5000 -d -t urlshortener
 ```
 
+## Tests
+
+API tests and unit tests are located in the 'tests' directory. To run them, from the base directory:
+
+```
+
+```
 ## Logging
 
 All logs print out in stdout/stderr and are available via the docker logs command:

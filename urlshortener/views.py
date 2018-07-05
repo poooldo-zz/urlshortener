@@ -1,5 +1,6 @@
-from app import app
-from app import database
+from urllib.parse import urlparse
+
+from urlshortener import database
 from flask import render_template, redirect, request, Response
 from flask import jsonify
 from functools import wraps
@@ -8,59 +9,22 @@ import json
 import random
 import re
 
-####################################
-##### App parameters loading #######
-####################################
-
-with open(".password") as hashfile:
-    admin_hash = hashfile.readline()[:-1]
-
-db_class = getattr(database, app.config['DB_DRIVER'])
-db_host = app.config['DB_HOST']
-
-if 'DB_USERNAME' in app.config:
-    db_username = app.config['DB_USERNAME']
-else:
-    db_username = None 
-
-if 'DB_PASSWORD' in app.config:
-    db_password = app.config['DB_PASSWORD']
-else:
-    db_password = None 
-
-if 'DB_KEYEXP' in app.config:
-    key_expiration = app.config['DB_KEYEXP'] 
-else:
-    key_expiration = 36000
-
-# key length to generate a shorten url
-if 'KEYLEN' in app.config:
-    KEY_LEN = int(app.config['KEYLEN'])
-else: 
-    KEY_LEN = 8
-
-# loading the database backend we selected
-db = db_class(host=db_host, username=db_username, password=db_password, key_expiration=key_expiration)
-
-# the key base to use for generating a shorten url
-ALPHA_BASE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-
-# the application domain
-WEB_HOST = app.config['WEB_HOST']
-REDIRECT_CODE = 301
-MAX_URL_SIZE = 2000
+from urlshortener.application import WEB_HOST, admin_hash, db, REDIRECT_CODE, MAX_URL_SIZE, KEY_LEN, ALPHA_BASE, app
 
 ####################################
 ####### HTTP error handlers ########
 ####################################
 
+
 @app.errorhandler(400)
 def bad_request(error):
     return render_template('400.html', error=error, host=WEB_HOST), 400
 
+
 @app.errorhandler(404)
 def page_not_found():
     return render_template('404.html', host=WEB_HOST), 404
+
 
 ####################################
 ######## Basic Auth mecanism #######
@@ -73,12 +37,14 @@ def check_auth(username, password):
     """
     return username == 'admin' and argon2.verify(password, admin_hash)
 
+
 def authenticate():
     """Sends a 401 response that enables basic auth"""
     return Response(
-    'Could not verify your access level for that URL.\n'
-    'You have to login with proper credentials', 401,
-    {'WWW-Authenticate': 'Basic realm="Login Required"'})
+        'Could not verify your access level for that URL.\n'
+        'You have to login with proper credentials', 401,
+        {'WWW-Authenticate': 'Basic realm="Login Required"'})
+
 
 def requires_auth(f):
     @wraps(f)
@@ -89,6 +55,7 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+
 ####################################
 ############ Frontend ##############
 ####################################
@@ -96,11 +63,12 @@ def requires_auth(f):
 @app.route('/')
 def index():
     """
-    The application homepage 
+    The application homepage
     @params:
     @returns:
     """
-    return render_template('index.html'), 200 
+    return render_template('index.html'), 200
+
 
 @app.route('/', methods=['POST'])
 def post_index():
@@ -120,6 +88,7 @@ def post_index():
         return render_template('index.html', url='https://{}'.format(json_data['url'])), 200
     return bad_request(json_data['status'])
 
+
 @app.route('/admin/stats')
 @requires_auth
 def admin():
@@ -134,7 +103,8 @@ def admin():
     results = db.get_all()
     for result in results:
         results_list.append(result)
-    return render_template('admin.html', results=results_list), 200 
+    return render_template('admin.html', results=results_list), 200
+
 
 ####################################
 ############ Backend ###############
@@ -150,11 +120,12 @@ def api_catch_all(path):
         redirect to the url if success
         404 page (not found) if not match
     """
-    value = db.get_value(path) 
+    value = db.get_value(path)
     if value is not None:
         return redirect(value, REDIRECT_CODE)
     else:
         return page_not_found()
+
 
 @app.route('/api/shorten')
 def api_shorten():
@@ -171,6 +142,7 @@ def api_shorten():
         return jsonify({'status': 'url too long - must be under 2000 chars'})
     if not url:
         return jsonify({'status': 'url missing - expected : http[s]://domain.gtld/[args]'})
+
     url_is_valid = re.fullmatch('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', url)
     if url_is_valid is None:
         return jsonify({'status': 'not a valid url - expected : http[s]://domain.gtld/[args]'})
@@ -182,6 +154,7 @@ def api_shorten():
         value = db.get_value(ukey)
     db.set_value(ukey, url)
     return jsonify({'status': 'ok', 'url': '{}/{}'.format(WEB_HOST, ukey)})
+
 
 @app.route('/api/stat')
 def api_shorten_stat():
@@ -201,11 +174,12 @@ def api_shorten_stat():
         return jsonify({'status': 'ok', 'url': '{}'.format(short_name), 'hit_count': '{}'.format(hit_count)})
     return jsonify({'status': 'short url not found', 'url': '{}'.format(short_name)})
 
+
 @app.route('/api/admin')
 @requires_auth
 def api_admin():
     """
-    Get all id, url, hit_count in 
+    Get all id, url, hit_count in
     the database
     @params:
     @returns:

@@ -1,0 +1,33 @@
+<html>
+<head>
+<title>shortener - welcome!</title>
+</head>
+<body>
+<div align=center>
+<form method="POST">
+shorten me:
+    <input name="url">
+    <input type="submit">
+</form>
+
+{% if url is defined %}
+<font size="3" color="blue">new shorten url! {{ url }}</font>
+{% endif %}
+
+
+<h4>tools:</h4>
+<table>
+<tr>
+    <td>/admin/stats</td>
+    <td><i>get admin statistics (restricted)</i></td>
+</tr>
+<tr>
+    <td>/&#60;shorten code&#62;</td>
+    <td><i>go to url</i></td>
+</tr>
+</table>
+<br>
+<a href="https://github.com/poooldo/urlshortener"><img src="/static/Octocat.png" alt="Fork me on GitHub" width="42" height="42"></a>
+</div>
+</body>
+</html>
