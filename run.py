@@ -1,9 +1,6 @@
-from app import app
-#app.run(debug=True)
-from werkzeug.contrib.fixers import ProxyFix
-#import logging
-#import sys
-#logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+from urlshortener.application import app
 
-app.wsgi_app = ProxyFix(app.wsgi_app)
-app.run(debug=False, threaded=True)
+if __name__ == '__main__':
+    from werkzeug.contrib.fixers import ProxyFix
+    app.wsgi_app = ProxyFix(app.wsgi_app)
+    app.run(debug=False, threaded=True)

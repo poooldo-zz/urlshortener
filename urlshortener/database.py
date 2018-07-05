@@ -1,12 +1,12 @@
 class Memcache(object):
     """
     This class is an interface to a memcache storage backend
-    it implements needed methods to store and fetch for an url 
+    it implements needed methods to store and fetch for an url
     shortener.
     """
 
     from pymemcache.client.hash import HashClient
-    
+
     def __init__(self, host, key_expiration, username=None, password=None):
         """
         Instanciate a memcache storage backend object
@@ -50,12 +50,13 @@ class Memcache(object):
         if res is not None:
             return res.decode('utf-8')
         return None
-    
+
     def get_stat(self, key):
         pass
 
     def get_all(self):
         pass
+
 
 class Couchbase(object):
     """
@@ -89,10 +90,6 @@ class Couchbase(object):
         self.key_expiration = key_expiration
         self.lock = self.threading.Lock()
 
-    #TODO reconnect after losing connection
-    def reconnect(self):
-        pass
-
     def set_value(self, key, value):
         """
         Set a new record in the datavase for a short code
@@ -103,7 +100,7 @@ class Couchbase(object):
             True or False if succeeded or not
         """
         try:
-            self.bucket.insert(key, {'url': value, 'hit_count': 0}, 
+            self.bucket.insert(key, {'url': value, 'hit_count': 0},
                                ttl=self.key_expiration,
                                format=self.couchbase.FMT_JSON)
         except self.couchbase.exceptions.KeyExistsError:
@@ -118,8 +115,8 @@ class Couchbase(object):
         @returns:
             a long url if found, None otherwise
         """
-        self.lock.acquire()
         try:
+            self.lock.acquire()
             value = self.bucket.get(key).value
             value['hit_count'] += 1
             self.bucket.replace(key, value)
@@ -127,8 +124,8 @@ class Couchbase(object):
         except self.couchbase.exceptions.NotFoundError:
             return None
         finally:
-            self.lock.release()
-
+            if self.lock.locked():
+                self.lock.release()
 
     def get_stat(self, key):
         """
@@ -140,9 +137,9 @@ class Couchbase(object):
         """
         try:
             value = self.bucket.get(key).value
+            return value['hit_count']
         except self.couchbase.exceptions.NotFoundError:
             return None
-        return value['hit_count']
 
     def get_all(self):
         """
@@ -155,5 +152,5 @@ class Couchbase(object):
         try:
             rows = self.bucket.n1ql_query('SELECT META().id, url, hit_count FROM shortener')
             return rows
-        except couchbase.exceptions.HTTPError:
+        except self.couchbase.exceptions.HTTPError:
             return None

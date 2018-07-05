@@ -1,4 +1,4 @@
-from app.database import Couchbase
+from urlshortener.database import Couchbase
 import time
 
 now = str(int(time.time()))
