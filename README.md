@@ -43,7 +43,7 @@ With a 8-characters length key, the default character-set, the number of possibl
 of 1000 requests/s, it would takes 2 527 084 days to generate every code permutations which is fair.
 
 There is many ways to deal with the code generation, for example generating a hash from the url we want to shorten. The
-technique used here is pretty fast, allows two have different code for the same orginal url, and we can't predict a shorten url 
+technique used here is pretty fast, allows different code for the same orginal url, and a shorten url can't be predicted
 from the original one.
 
 ### Basic authentication

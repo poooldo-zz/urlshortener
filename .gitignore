@@ -1,7 +1,4 @@
 *.pyc
 TODO
-serversfile
 instance/*
-app/templates/*
-app/static/*
 config.py

@@ -1,0 +1,36 @@
+<html>
+<head>
+<title>shortener - Admin page</title>
+<style>
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+td {
+    text-align: center;
+    padding: 8px;
+}
+tr:nth-child(even) {background-color: #f2f2f2;}
+</style>
+</head>
+<body>
+
+<div align=center>
+<h1>Administrator area</h1>
+<table>
+    <tr>
+        <th>short code</th>
+        <th>URL</th>
+        <th>hit count</th>
+    </tr>
+    {% for result in results %}
+    <tr>
+        <td>{{ result['id'] }}</td>
+        <td>{{ result['url'] }}</td>
+        <td>{{ result['hit_count'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+</div>
+</body>
+</html>
