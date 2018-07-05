@@ -33,13 +33,18 @@ if 'DB_KEYEXP' in app.config:
 else:
     key_expiration = 36000
 
-# loading the database backend
+# key length to generate a shorten url
+if 'KEYLEN' in app.config:
+    KEY_LEN = int(app.config['KEYLEN'])
+else: 
+    KEY_LEN = 8
+
+# loading the database backend we selected
 db = db_class(host=db_host, username=db_username, password=db_password, key_expiration=key_expiration)
 
 # the key base to use for generating a shorten url
 ALPHA_BASE = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-# key length to generate a shorten url
-KEY_LEN= int(app.config['KEYLEN'])
+
 # the application domain
 WEB_HOST = app.config['WEB_HOST']
 REDIRECT_CODE = 301
@@ -199,6 +204,14 @@ def api_shorten_stat():
 @app.route('/api/admin')
 @requires_auth
 def api_admin():
+    """
+    Get all id, url, hit_count in 
+    the database
+    @params:
+    @returns:
+        a json object containing all
+        database information
+    """
     results_list = []
     results = db.get_all()
     for result in results:
