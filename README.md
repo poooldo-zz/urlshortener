@@ -152,8 +152,18 @@ docker run -p 5000:5000 -d -t urlshortener
 API tests and unit tests are located in the 'tests' directory. To run them, from the base directory:
 
 ```
+$ python -m pytest tests/
+================================================================================================================== test session starts ===================================================================================================================
+platform linux -- Python 3.4.2, pytest-3.6.2, py-1.5.4, pluggy-0.6.0
+rootdir: /root/dev/ursho/src, inifile:
+collected 20 items                                                                                                                                                                                                                                       
 
+tests/database/test_database.py .......                                                                                                                                                                                                            [ 35%]
+tests/web/test_web.py .............                                                                                                                                                                                                                [100%]
+
+=============================================================================================================== 20 passed in 3.28 seconds ================================================================================================================
 ```
+
 ## Logging
 
 All logs print out in stdout/stderr and are available via the docker logs command:
