@@ -138,11 +138,11 @@ def api_shorten():
         and the shorten url if success
     """
     url = request.values.get('url')
-    if len(url) > MAX_URL_SIZE:
-        return jsonify({'status': 'url too long - must be under 2000 chars'})
+
     if not url:
         return jsonify({'status': 'url missing - expected : http[s]://domain.gtld/[args]'})
-
+    if len(url) > MAX_URL_SIZE:
+        return jsonify({'status': 'url too long - must be under 2000 chars'})
     url_is_valid = re.fullmatch('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', url)
     if url_is_valid is None:
         return jsonify({'status': 'not a valid url - expected : http[s]://domain.gtld/[args]'})
